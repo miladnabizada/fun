@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>New Gym Workout 🏋️‍♀️</title>
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  font-family: "Comic Sans MS", "Segoe UI", sans-serif;
+  overflow: hidden;
+  transition: background 1s ease;
+}
+
+.card {
+  background: white;
+  padding: 40px 50px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 10;
+  transition: box-shadow 1s ease;
+  width: 450px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+h1 {
+  margin-bottom: 30px;
+  color: #ff4d6d;
+}
+
+.buttons {
+  position: relative;
+  width: 100%;
+  height: 140px; /* enough space for stacked buttons */
+}
+
+button {
+  padding: 12px 26px;
+  font-size: 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  position: absolute;
+  z-index: 11;
+}
+
+#yes { 
+  background: #ff4d6d; 
+  color: white; 
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+}
+#yes:hover { 
+  transform: translateX(-50%) scale(1.05); 
+}
+
+#no {
+  background: #ccc;
+  color: #333;
+}
+
+.message {
+  margin-top: 25px;
+  font-size: 22px;
+  color: #ff4d6d;
+  display: none;
+  z-index: 11;
+}
+
+.particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 32px;
+  opacity: 1;
+  transform-origin: center;
+  z-index: 20;
+  transition: transform 3s ease-out, opacity 3s ease-out;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Will you be my Valentine? 💘</h1>
+  <div class="buttons">
+    <button id="yes">Yes 💕</button>
+    <button id="no">No 😶</button>
+  </div>
+  <div class="message" id="message">Knew it 😌💖 Happy Valentine’s Day!</div>
+</div>
+
+<audio id="music" src="a-night-to-remember.mp3" preload="auto"></audio>
+
+<script>
+const noButton = document.getElementById("no");
+const card = document.querySelector(".card");
+const yesButton = document.getElementById("yes");
+const message = document.getElementById("message");
+const music = document.getElementById("music");
+
+// ---------------- MUSIC ----------------
+let musicStarted = false;
+function startMusic() {
+  if(!musicStarted){
+    music.play().catch(()=>{});
+    let fadeIn = setInterval(()=>{
+      if(music.volume < 0.5) music.volume = Math.min(music.volume+0.01,0.5);
+      else clearInterval(fadeIn);
+    },50);
+    musicStarted = true;
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+  }
+}
+document.addEventListener("click", startMusic);
+document.addEventListener("touchstart", startMusic);
+
+// ---------------- NO BUTTON ----------------
+// place No button visually stacked under Yes button with tiny gap
+function placeNoButtonUnderYes() {
+  const yesRect = yesButton.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  const gap = 3; // small 3px gap
+
+  const newX = yesRect.left - cardRect.left; // same X as Yes
+  const newY = yesRect.bottom - cardRect.top + gap; // tiny gap below Yes
+
+  noButton.style.left = newX + "px";
+  noButton.style.top = newY + "px";
+  noButton.style.width = yesRect.width + "px";  // match Yes width
+  noButton.style.height = yesRect.height + "px"; // match Yes height
+}
+
+// call on page load
+placeNoButtonUnderYes();
+
+// move No button anywhere inside card except covering Yes
+function moveNoButton() {
+  const cardRect = card.getBoundingClientRect();
+  const yesRect = yesButton.getBoundingClientRect();
+  const btnRect = noButton.getBoundingClientRect();
+
+  const cardWidth = card.offsetWidth - btnRect.width;
+  const cardHeight = card.offsetHeight - btnRect.height;
+
+  let newX, newY;
+  do {
+    newX = Math.random() * cardWidth;
+    newY = Math.random() * cardHeight;
+  } while (
+    newX + btnRect.width > yesRect.left - cardRect.left &&
+    newX < yesRect.right - cardRect.left &&
+    newY + btnRect.height > yesRect.top - cardRect.top &&
+    newY < yesRect.bottom - cardRect.top
+  );
+
+  noButton.style.left = newX + "px";
+  noButton.style.top = newY + "px";
+
+  // vibration on phones
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+
+// event listeners for evasive behavior
+noButton.addEventListener("mouseover", moveNoButton);
+noButton.addEventListener("touchstart", e=>{e.preventDefault(); moveNoButton();});
+noButton.addEventListener("touchmove", e=>{e.preventDefault(); moveNoButton();});
+document.addEventListener("mousemove", e=>{
+  const rect = noButton.getBoundingClientRect();
+  const dx = e.clientX-(rect.left+rect.width/2);
+  const dy = e.clientY-(rect.top+rect.height/2);
+  if(Math.sqrt(dx*dx+dy*dy)<90) moveNoButton();
+});
+
+// ---------------- YES BUTTON ----------------
+yesButton.addEventListener("click", ()=>{
+  message.style.display = "block";
+  noButton.remove();
+
+  document.body.style.background = "linear-gradient(135deg, #ff9a9e, #fad0c4, #ffe6f0)";
+  card.style.boxShadow = "0 0 80px rgba(255,77,109,0.7)";
+
+  const centerX = window.innerWidth/2;
+  const centerY = window.innerHeight/2;
+
+  const points = [];
+  for(let t=0;t<Math.PI*2;t+=0.15){
+    const x = 16*Math.pow(Math.sin(t),3);
+    const y = - (13*Math.cos(t) -5*Math.cos(2*t) -2*Math.cos(3*t) - Math.cos(4*t));
+    points.push([x*15+centerX, y*15+centerY]);
+  }
+
+  points.forEach(([x,y],i)=>{
+    setTimeout(()=>{
+      const heart = document.createElement("div");
+      heart.className="particle";
+      heart.innerText="❤️";
+      heart.style.left = x + "px";
+      heart.style.top = y + "px";
+      heart.style.fontSize = (20+Math.random()*20)+"px";
+      document.body.appendChild(heart);
+
+      const angle = Math.random()*2*Math.PI;
+      const distance = 200 + Math.random()*100;
+      const finalX = x + distance*Math.cos(angle);
+      const finalY = y + distance*Math.sin(angle);
+      setTimeout(()=>{
+        heart.style.transform = `translate(${finalX-x}px, ${finalY-y}px) scale(1.2)`;
+        heart.style.opacity = 0;
+      },50);
+
+      setTimeout(()=>heart.remove(),3500);
+    }, i*50);
+  });
+
+  setTimeout(()=>{
+    let fadeOut = setInterval(()=>{
+      if(music.volume>0) music.volume=Math.max(music.volume-0.01,0);
+      else clearInterval(fadeOut);
+    },50);
+  },20000);
+});
+</script>
+</body>
+</html>
