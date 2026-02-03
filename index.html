@@ -113,12 +113,22 @@ const music = document.getElementById("music");
 // ---------------- MUSIC ----------------
 let musicStarted = false;
 function startMusic() {
-  if(!musicStarted){
-    music.play().catch(()=>{});
-    let fadeIn = setInterval(()=>{
-      if(music.volume < 0.5) music.volume = Math.min(music.volume+0.01,0.5);
-      else clearInterval(fadeIn);
-    },50);
+  if (!musicStarted) {
+    music.volume = 0;          // 🔑 critical
+    music.muted = false;
+
+    music.play().then(() => {
+      let fadeIn = setInterval(() => {
+        if (music.volume < 0.5) {
+          music.volume = Math.min(music.volume + 0.01, 0.5);
+        } else {
+          clearInterval(fadeIn);
+        }
+      }, 50);
+    }).catch(err => {
+      console.log("Audio blocked:", err);
+    });
+
     musicStarted = true;
     document.removeEventListener("click", startMusic);
     document.removeEventListener("touchstart", startMusic);
